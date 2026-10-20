@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduMore — Academic Workspace Prototype</title>
+<style>
+:root{
+  --navy:#13273F; --navy-2:#1D3857; --pearl:#E8D6C0; --pearl-light:#F7F1E9;
+  --red:#4E0000; --red-soft:#F8EAEA; --ink:#202B38; --muted:#6D7886;
+  --line:#E3E7ED; --surface:#FFFFFF; --canvas:#F5F7FA; --green:#287653;
+  --green-soft:#E9F5EE; --amber:#946200; --amber-soft:#FFF4D9;
+  --shadow:0 12px 30px rgba(19,39,63,.07); --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #7CA7F8;outline-offset:2px}
+.hidden{display:none!important}
+.app{min-height:100vh}
+.sidebar{position:fixed;inset:0 auto 0 0;width:220px;background:var(--navy);color:#fff;padding:24px 16px;display:flex;flex-direction:column;z-index:20;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:11px;padding:0 9px 28px}
+.brand-mark{height:40px;width:40px;border-radius:12px;background:var(--pearl);color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:19px}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:-.5px}
+.brand-caption{font-size:11px;color:#B9C6D5;margin-top:2px}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#8EA0B5;padding:12px 12px 8px}\n.nav button[draggable='true']{cursor:grab}\n.nav button.dragging{opacity:.4}\n.nav button.drop-target{outline:1px dashed #E8D6C0;outline-offset:1px}
+.nav{display:grid;gap:5px}
+.nav button{display:flex;align-items:center;gap:12px;border:0;color:#D9E2EC;background:transparent;text-align:left;padding:12px;border-radius:11px;font-size:13px;font-weight:600;width:100%;transition:.18s}
+.nav button:hover{background:#203B5A;color:#fff}\n#utilityNav button{cursor:grab;padding-right:9px}
+.nav button.active{background:#E8D6C0;color:var(--navy)}
+.nav .ico{width:19px;text-align:center;font-size:17px}
+.sidebar-bottom{margin-top:auto}
+.workspace-card{border:1px solid #3C526B;background:#1A334F;border-radius:13px;padding:13px;margin:10px 4px 0}
+.workspace-card small{display:block;color:#AAB9CA;font-size:10px;margin-bottom:7px}
+.workspace-card strong{font-size:12px}
+.workspace-card p{font-size:11px;line-height:1.5;color:#C5D0DC;margin:8px 0 0}
+.main{margin-left:220px;min-height:100vh}
+.topbar{height:76px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
+.topbar-left{display:flex;align-items:center;gap:13px}
+.breadcrumb{font-size:12px;color:var(--muted)}
+.breadcrumb strong{color:var(--ink);font-weight:700}
+.search{position:relative;width:min(310px,30vw)}
+.search input{width:100%;border:1px solid var(--line);background:#F9FAFC;border-radius:10px;padding:10px 12px 10px 35px;font-size:12px}
+.search span{position:absolute;left:12px;top:9px;color:#8995A4}
+.top-actions{display:flex;align-items:center;gap:12px}
+.icon-btn{border:1px solid var(--line);background:#fff;border-radius:10px;width:38px;height:38px;display:grid;place-items:center;color:var(--navy);position:relative}
+.dot{position:absolute;right:7px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--pearl);color:var(--navy);font-size:12px;font-weight:800}
+.profile{display:flex;align-items:center;gap:9px}
+.profile-text strong{display:block;font-size:12px}
+.profile-text small{font-size:10px;color:var(--muted)}
+.menu-toggle{display:none}
+.feature-nav{display:flex;align-items:center;gap:6px;padding:12px 32px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:76px;z-index:9}\n.feature-nav .feature-label{font-size:9px;text-transform:uppercase;letter-spacing:1.1px;color:#8995A4;font-weight:800;margin-right:5px;white-space:nowrap}\n.feature-nav button{border:0;background:transparent;color:#5D6B78;padding:10px 13px;border-radius:9px;font-size:11px;font-weight:750;white-space:nowrap}\n.feature-nav button:hover{background:var(--pearl-light);color:var(--navy)}\n.feature-nav button.active{background:var(--navy);color:#fff}\n.feature-nav .feature-icon{margin-right:7px}\n.content{max-width:1500px;margin:auto;padding:27px 32px 46px}
+.page{display:none;animation:fade .22s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:10px;letter-spacing:1.7px;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:9px}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:25px}
+h1{font-size:27px;letter-spacing:-.8px;color:var(--navy);margin:0 0 7px;font-weight:800}
+.lead{font-size:13px;line-height:1.6;color:var(--muted);margin:0;max-width:680px}
+.heading-actions{display:flex;gap:9px;flex-wrap:wrap}
+.btn{border:1px solid transparent;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.18s}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy-2);transform:translateY(-1px)}
+.btn-accent{background:var(--red);color:#fff}
+.btn-accent:hover{background:#680909}
+.btn-secondary{background:#fff;border-color:var(--line);color:var(--navy)}
+.btn-secondary:hover{border-color:#9DAFC2;background:#FBFCFE}
+.btn-soft{background:var(--pearl-light);color:var(--navy);border-color:#E8D6C0}
+.btn-small{padding:7px 10px;font-size:11px}
+.grid{display:grid;gap:16px}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 3px 12px rgba(19,39,63,.025)}
+.stat-card{padding:18px 19px;position:relative;overflow:hidden}
+.stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.stat-icon{width:38px;height:38px;border-radius:12px;background:var(--pearl-light);display:grid;place-items:center;font-size:17px}
+.stat-label{font-size:11px;color:var(--muted);font-weight:650}
+.stat-value{font-size:27px;font-weight:850;letter-spacing:-1px;color:var(--navy)}
+.stat-foot{font-size:10px;color:var(--muted);margin-top:5px}
+.stat-foot b{color:var(--green)}
+.dash-grid{grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr);align-items:start}
+.card-header{padding:18px 20px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card-header h2{font-size:14px;color:var(--navy);margin:0;font-weight:800}
+.card-header p{font-size:11px;color:var(--muted);margin:5px 0 0}
+.card-body{padding:0 20px 20px}
+.link-btn{border:0;background:transparent;color:var(--blue,#2F6FED);font-size:11px;font-weight:750;padding:4px}
+.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quick-action{border:1px solid var(--line);border-radius:13px;padding:14px;text-align:left;background:#fff;transition:.2s}
+.quick-action:hover{border-color:#C7D4E4;box-shadow:var(--shadow);transform:translateY(-2px)}
+.quick-icon{height:35px;width:35px;border-radius:10px;display:grid;place-items:center;background:var(--pearl-light);font-size:17px;margin-bottom:12px}
+.quick-action strong{display:block;font-size:12px;color:var(--navy);margin-bottom:5px}
+.quick-action span{display:block;font-size:10px;color:var(--muted);line-height:1.5}
+.task-list{display:grid;gap:0}
+.task-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #EEF1F5}
+.task-row:last-child{border-bottom:0}
+.task-symbol{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;background:var(--pearl-light);border-radius:10px}
+.task-info{flex:1;min-width:0}
+.task-info strong{display:block;font-size:11px;color:var(--navy);margin-bottom:4px}
+.task-info small{font-size:10px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:100px;padding:5px 8px;font-size:9px;font-weight:800;white-space:nowrap}
+.badge.pending{background:var(--amber-soft);color:var(--amber)}
+.badge.ready{background:var(--green-soft);color:var(--green)}
+.badge.progress{background:var(--pale-blue,#EAF1FF);color:var(--blue)}
+.badge.draft{background:#EEF1F5;color:#596575}
+.progress-track{height:7px;border-radius:20px;background:#EDF0F4;overflow:hidden}
+.progress-fill{height:100%;border-radius:20px;background:var(--red)}
+.course-item{padding:14px 0;border-bottom:1px solid #EEF1F5}
+.course-item:last-child{border:0}
+.course-title{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:11px;font-weight:750;color:var(--navy)}
+.course-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-top:7px}
+.notice{display:flex;gap:11px;padding:13px;background:var(--pearl-light);border-radius:12px;margin-bottom:10px}
+.notice:last-child{margin-bottom:0}
+.notice .notice-icon{font-size:16px}
+.notice strong{font-size:11px;display:block;color:var(--navy);margin-bottom:4px}
+.notice p{font-size:10px;line-height:1.5;color:var(--muted);margin:0}
+.section-gap{margin-top:19px}
+.form-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,.75fr);gap:17px;align-items:start}
+.form-card{padding:22px}
+.form-card h2{font-size:14px;color:var(--navy);margin:0 0 6px}
+.form-card .hint{font-size:11px;line-height:1.5;color:var(--muted);margin:0 0 20px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.field{display:grid;gap:7px;margin-bottom:15px}
+.field label{font-size:11px;font-weight:750;color:var(--navy)}
+.field small{font-size:10px;color:var(--muted);line-height:1.45}
+.field input,.field select,.field textarea{width:100%;border:1px solid #DCE3EC;border-radius:10px;background:#fff;padding:11px 12px;font-size:12px;color:var(--ink)}
+.field textarea{min-height:105px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#8CA9D5;outline:3px solid #E7EFFF}
+.full{grid-column:1/-1}
+.check-row{display:flex;align-items:flex-start;gap:9px;font-size:11px;color:var(--muted);line-height:1.5;margin:7px 0 14px}
+.check-row input{margin-top:2px;accent-color:var(--navy)}
+.aside-box{padding:19px}
+.aside-box h3{font-size:13px;color:var(--navy);margin:0 0 12px}
+.step-list{display:grid;gap:12px}
+.step{display:flex;gap:10px;align-items:flex-start}
+.step-number{height:25px;width:25px;border-radius:50%;display:grid;place-items:center;background:var(--pearl-light);color:var(--navy);font-size:10px;font-weight:850;flex:0 0 25px}
+.step strong{font-size:11px;display:block;margin:2px 0 4px;color:var(--navy)}
+.step p{font-size:10px;line-height:1.45;color:var(--muted);margin:0}
+.output-box{padding:19px;margin-top:15px}
+.output-box h3{font-size:13px;color:var(--navy);margin:0 0 10px}
+.output-placeholder{border:1px dashed #C9D3DF;background:#FAFBFD;border-radius:12px;padding:24px;text-align:center;color:var(--muted)}
+.output-placeholder .big{font-size:27px;margin-bottom:8px}
+.output-placeholder strong{display:block;font-size:12px;color:var(--navy);margin-bottom:6px}
+.output-placeholder p{font-size:10px;line-height:1.5;margin:0 auto;max-width:300px}
+.output-result{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fff}
+.output-result h3{font-size:17px;margin:0 0 8px}
+.output-result p{font-size:12px;line-height:1.65;color:var(--muted)}
+.result-section{padding:11px 0;border-bottom:1px solid #EEF1F5}
+.result-section:last-child{border-bottom:0}
+.result-section strong{font-size:11px;color:var(--navy);display:block;margin-bottom:5px}
+.result-section p{font-size:11px;margin:0}
+.result-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:4px;background:#EEF1F5;border-radius:11px;width:max-content;max-width:100%;margin-bottom:17px}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:9px 12px;border-radius:8px;font-size:11px;font-weight:750}
+.tabs button.active{background:#fff;color:var(--navy);box-shadow:0 2px 5px rgba(0,0,0,.04)}
+.table-wrap{overflow:auto}
+.data-table{width:100%;border-collapse:collapse;min-width:650px}
+.data-table th{text-align:left;background:#F7F9FC;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:13px 15px;border-bottom:1px solid var(--line)}
+.data-table td{padding:14px 15px;border-bottom:1px solid #EEF1F5;font-size:11px;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:0}
+.data-table td strong{color:var(--navy)}
+.table-actions{display:flex;gap:6px}
+.empty{text-align:center;padding:35px;color:var(--muted);font-size:12px}
+.stat-mini{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #EEF1F5;font-size:11px}
+.stat-mini:last-child{border:0}
+.stat-mini span{color:var(--muted)}
+.stat-mini strong{color:var(--navy)}
+.report-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.report-card{padding:18px}
+.report-card .report-icon{width:36px;height:36px;border-radius:11px;background:var(--pearl-light);display:grid;place-items:center;margin-bottom:13px}
+.report-card h3{font-size:12px;color:var(--navy);margin:0 0 7px}
+.report-card p{font-size:10px;line-height:1.5;color:var(--muted);margin:0 0 14px}
+.approval-item{display:flex;gap:13px;padding:16px 0;border-bottom:1px solid #EEF1F5}
+.approval-item:last-child{border:0}
+.doc-icon{width:42px;height:48px;border-radius:9px;background:var(--pearl-light);display:grid;place-items:center;font-size:19px;flex:0 0 42px}
+.approval-content{flex:1}
+.approval-content h3{font-size:12px;color:var(--navy);margin:0 0 5px}
+.approval-content p{font-size:10px;line-height:1.5;color:var(--muted);margin:0 0 9px}
+.approval-actions{display:flex;gap:7px;flex-wrap:wrap}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.day-head{text-align:center;font-size:9px;color:var(--muted);padding:8px 0;font-weight:800}
+.day{min-height:78px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px;font-size:10px;color:var(--navy)}
+.day.muted{color:#B0B8C2;background:#FAFBFC}
+.day.today{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.event{margin-top:6px;background:var(--pearl-light);border-left:2px solid var(--red);padding:4px;border-radius:4px;font-size:8px;line-height:1.35}
+.toast-region{position:fixed;right:22px;bottom:22px;z-index:100;display:grid;gap:9px}
+.toast{background:var(--navy);color:#fff;padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);font-size:12px;max-width:340px;animation:fade .2s ease}
+.toast.error{background:var(--red)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(13,26,42,.48);z-index:80;display:grid;place-items:center;padding:18px}
+.modal{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;box-shadow:0 25px 80px rgba(0,0,0,.22)}
+.modal h2{font-size:18px;color:var(--navy);margin:0 0 7px}
+.modal p{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 17px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.toast-region{pointer-events:none}
+.toast{pointer-events:auto}
+.mobile-overlay{display:none}
+@media(max-width:1100px){\n  .feature-nav{padding:10px 22px}.feature-nav button{padding:9px 11px}
+  .sidebar{width:220px}.main{margin-left:220px}.content{padding:24px 22px 38px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dash-grid,.form-layout{grid-template-columns:1fr}
+  .report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){\n  .feature-nav{top:66px;padding:8px 10px;gap:3px}.feature-nav .feature-label{display:none}.feature-nav button{padding:9px 10px;font-size:10px}.content{padding-top:20px}
+  .sidebar{transform:translateX(-100%);width:260px}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.topbar{padding:0 15px;height:66px}.menu-toggle{display:grid}
+  .search{display:none}.profile-text{display:none}.content{padding:22px 14px 34px}
+  .page-heading{display:block}.heading-actions{margin-top:16px}
+  h1{font-size:24px}.stats{gap:10px}.stat-card{padding:14px}.stat-value{font-size:23px}
+  .dash-grid{grid-template-columns:1fr}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .form-grid{grid-template-columns:1fr}.full{grid-column:auto}
+  .report-grid{grid-template-columns:1fr}.card-header{padding:16px}.card-body{padding:0 16px 16px}
+  .form-card{padding:17px}.calendar{gap:4px}.day{min-height:58px;padding:4px}.event{font-size:7px}
+  .mobile-overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:15}
+}
+@media print{
+  .sidebar,.topbar,.heading-actions,.btn,.tabs{display:none!important}
+  .main{margin:0}.content{padding:0}.page{display:none!important}.page.active{display:block!important}
+  body{background:#fff}.card{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar(false)"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">E</div>
+      <div><div class="brand-name">EduMore</div><div class="brand-caption">Academic workspace</div></div>
+    </div>
+    <div class="nav-label">Everyday tools <span style="float:right;font-size:9px;letter-spacing:0;text-transform:none">↕ drag to sort</span></div>
+    <nav class="nav" id="utilityNav" aria-label="Utility navigation">
+      <button data-page="approvals" draggable="true" title="Drag to reorder"><span class="ico">✓</span>Review &amp; Approvals <span id="approvalNavCount" class="badge pending" style="margin-left:auto">2</span><span style="margin-left:auto;color:#91A3B7">⠿</span></button>
+      <button data-page="schedule" draggable="true" title="Drag to reorder"><span class="ico">▦</span>Academic Schedule <span style="margin-left:auto;color:#91A3B7">⠿</span></button>
+      <button data-page="reports" draggable="true" title="Drag to reorder"><span class="ico">▥</span>Reports <span style="margin-left:auto;color:#91A3B7">⠿</span></button>
+      <button data-page="tasks" draggable="true" title="Drag to reorder"><span class="ico">◷</span>Task Center <span style="margin-left:auto;color:#91A3B7">⠿</span></button>
+    </nav>
+    <div class="nav-label">Preferences</div>
+    <nav class="nav" aria-label="Preferences">
+      <button data-page="settings"><span class="ico">⚙</span>Settings</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="workspace-card">
+        <small>ACTIVE WORKSPACE</small>
+        <strong id="institutionLabel">Northstar Learning Institute</strong>
+        <p>Prototype mode · Sample data only</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn menu-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+        <div class="breadcrumb">EduMore <span style="color:#A5AFBA">/</span> <strong id="breadcrumbTitle">Dashboard</strong></div>
+      </div>
+      <div class="top-actions">
+        <label class="search"><span>⌕</span><input id="globalSearch" type="search" placeholder="Search courses, notes, tasks…" aria-label="Search prototype data"></label>
+        <button class="icon-btn" onclick="showNotifications()" aria-label="Notifications">♧<i class="dot"></i></button>
+        <div class="profile">
+          <div class="avatar">AM</div>
+          <div class="profile-text"><strong id="userLabel">Ayan Mansoori</strong><small id="roleLabel">Faculty workspace</small></div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="feature-nav" aria-label="Core features">
+      <span class="feature-label">Core features</span>
+      <button class="active" data-page="dashboard"><span class="feature-icon">▦</span>Dashboard</button>
+      <button data-page="curriculum"><span class="feature-icon">⌘</span>Curriculum Designer</button>
+      <button data-page="notes"><span class="feature-icon">▤</span>Notes &amp; Assessments</button>
+      <button data-page="courses"><span class="feature-icon">▣</span>Courses &amp; Progress</button>
+    </nav>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-heading">
+          <div><div class="eyebrow">MONDAY, 20 OCTOBER</div><h1>Good afternoon, Ayan.</h1><p class="lead">Here’s what’s happening across your academic workspace. Pick up where you left off or start something new.</p></div>
+          <div class="heading-actions"><button class="btn btn-secondary" onclick="navigate('tasks')">View task center ↗</button><button class="btn btn-primary" onclick="navigate('notes')">＋ Create learning material</button></div>
+        </div>
+        <div class="grid stats">
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Active courses</span><span class="stat-icon">▣</span></div><div class="stat-value" id="statCourses">08</div><div class="stat-foot"><b>2 updated</b> this week</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Syllabus completed</span><span class="stat-icon">◴</span></div><div class="stat-value">68%</div><div class="stat-foot">Across active courses</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Awaiting review</span><span class="stat-icon">✓</span></div><div class="stat-value" id="statApprovals">02</div><div class="stat-foot">Needs faculty attention</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Tasks in progress</span><span class="stat-icon">◷</span></div><div class="stat-value" id="statTasks">03</div><div class="stat-foot">Background jobs &amp; drafts</div></div>
+        </div>
+        <div class="grid dash-grid">
+          <div class="grid">
+            <div class="card">
+              <div class="card-header"><div><h2>Quick actions</h2><p>Start a workflow in a few clicks.</p></div><span class="badge ready">READY TO USE</span></div>
+              <div class="card-body"><div class="quick-grid">
+                <button class="quick-action" onclick="navigate('curriculum')"><div class="quick-icon">⌘</div><strong>Design a curriculum</strong><span>Research a course and build a visual learning roadmap.</span></button>
+                <button class="quick-action" onclick="navigate('notes')"><div class="quick-icon">▤</div><strong>Generate notes</strong><span>Create structured notes, diagrams and a reviewable PDF.</span></button>
+                <button class="quick-action" onclick="openAssessment()"><div class="quick-icon">☷</div><strong>Create an assessment</strong><span>Build questions, answer keys and a test paper.</span></button>
+                <button class="quick-action" onclick="navigate('reports')"><div class="quick-icon">▥</div><strong>Build an academic report</strong><span>Review progress, workload and academic summaries.</span></button>
+              </div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><h2>Recent tasks</h2><p>Sample prototype activity.</p></div><button class="link-btn" onclick="navigate('tasks')">See all tasks →</button></div>
+              <div class="card-body"><div class="task-list" id="recentTasks"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><h2>Course progress</h2><p>Progress values are sample data for this prototype.</p></div><button class="link-btn" onclick="navigate('courses')">View courses →</button></div>
+              <div class="card-body" id="dashboardCourses"></div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <div class="card-header"><div><h2>Needs your attention</h2><p>Items waiting for a decision.</p></div></div>
+              <div class="card-body">
+                <div class="notice"><div class="notice-icon">◷</div><div><strong>2 items need review</strong><p>Review generated notes and an assessment before publication.</p><button class="link-btn" onclick="navigate('approvals')">Review items →</button></div></div>
+                <div class="notice"><div class="notice-icon">!</div><div><strong>Python syllabus is behind plan</strong><p>Two topics are past their planned completion date.</p><button class="link-btn" onclick="navigate('courses')">Check progress →</button></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><h2>Academic snapshot</h2><p>This month</p></div><span class="badge progress">SAMPLE</span></div>
+              <div class="card-body">
+                <div class="stat-mini"><span>Planned sessions</span><strong>24</strong></div>
+                <div class="stat-mini"><span>Completed sessions</span><strong>18</strong></div>
+                <div class="stat-mini"><span>Faculty workload</span><strong>76%</strong></div>
+                <div class="stat-mini"><span>Reports ready</span><strong>04</strong></div>
+                <div style="margin-top:15px"><button class="btn btn-secondary" style="width:100%" onclick="navigate('schedule')">Open academic schedule</button></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><h2>Latest activity</h2><p>Recent workspace updates</p></div></div>
+              <div class="card-body">
+                <div class="task-row"><div class="task-symbol">✓</div><div class="task-info"><strong>Data Structures notes updated</strong><small>Today · 10:42 AM</small></div></div>
+                <div class="task-row"><div class="task-symbol">▤</div><div class="task-info"><strong>Python curriculum draft saved</strong><small>Yesterday · 4:18 PM</small></div></div>
+                <div class="task-row"><div class="task-symbol">▥</div><div class="task-info"><strong>Monthly report generated</strong><small>17 Oct · 1:20 PM</small></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CURRICULUM -->
+      <section class="page" id="page-curriculum">
+        <div class="page-heading"><div><div class="eyebrow">AI WORKFLOW 01</div><h1>Curriculum Designer</h1><p class="lead">Turn a learning goal into a researched curriculum, a sequenced roadmap, and a draft ready for faculty review.</p></div><div class="heading-actions"><span class="badge draft">PROTOTYPE SIMULATION</span></div></div>
+        <div class="form-layout">
+          <div class="card form-card">
+            <h2>Define the learning goal</h2><p class="hint">Add the course requirements. This prototype simulates the workflow locally; it does not perform live internet research.</p>
+            <form id="curriculumForm">
+              <div class="field"><label for="courseName">Course or skill *</label><input id="courseName" required value="Python Programming" placeholder="e.g. Python Programming"></div>
+              <div class="form-grid">
+                <div class="field"><label for="learnerLevel">Learner level</label><select id="learnerLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>Mixed level</option></select></div>
+                <div class="field"><label for="duration">Target duration</label><select id="duration"><option>4 weeks</option><option>8 weeks</option><option selected>12 weeks</option><option>3 months</option><option>6 months</option><option>1 year</option></select></div>
+                <div class="field"><label for="weeklyHours">Hours per week</label><select id="weeklyHours"><option>2–3 hours</option><option selected>4–6 hours</option><option>7–10 hours</option><option>10+ hours</option></select></div>
+                <div class="field"><label for="curriculumStyle">Learning format</label><select id="curriculumStyle"><option>Balanced theory and practice</option><option>Project-based</option><option>Exam-focused</option><option>Career / job-focused</option></select></div>
+              </div>
+              <div class="field"><label for="curriculumGoals">Learning outcomes and constraints</label><textarea id="curriculumGoals" placeholder="What should learners be able to do? Mention projects, assessments, or required topics.">Build a strong foundation, solve practical problems, and complete a portfolio project.</textarea></div>
+              <label class="check-row"><input type="checkbox" id="curriculumSources" checked><span>Prioritize official documentation and reputable learning sources; retain citations in the draft.</span></label>
+              <label class="check-row"><input type="checkbox" id="curriculumRoadmap" checked><span>Include a visual roadmap, milestones, estimated time, and assessment checkpoints.</span></label>
+              <button class="btn btn-primary" type="submit">Generate curriculum draft ↗</button>
+            </form>
+          </div>
+          <div>
+            <div class="card aside-box"><h3>Workflow stages</h3><div class="step-list">
+              <div class="step"><span class="step-number">1</span><div><strong>Understand requirements</strong><p>Extract goals, level, duration and constraints.</p></div></div>
+              <div class="step"><span class="step-number">2</span><div><strong>Research sources</strong><p>Search, check credibility and flag conflicting evidence.</p></div></div>
+              <div class="step"><span class="step-number">3</span><div><strong>Build curriculum</strong><p>Sequence modules, outcomes, hours and checkpoints.</p></div></div>
+              <div class="step"><span class="step-number">4</span><div><strong>Validate and review</strong><p>Check coverage and send the draft for faculty approval.</p></div></div>
+            </div></div>
+            <div class="card output-box"><h3>Generated output</h3><div id="curriculumOutput" class="output-placeholder"><div class="big">⌘</div><strong>Your curriculum will appear here</strong><p>Complete the form and generate a simulated draft to explore the review flow.</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="page" id="page-notes">
+        <div class="page-heading"><div><div class="eyebrow">AI WORKFLOW 02</div><h1>Notes &amp; Assessments</h1><p class="lead">Create learning notes and test packages with diagrams, quality checks, faculty review, and export-ready output.</p></div><div class="heading-actions"><button class="btn btn-secondary" onclick="navigate('approvals')">Open review queue</button></div></div>
+        <div class="tabs" role="tablist"><button class="active" data-tab="notesTab">Generate notes</button><button data-tab="assessmentTab">Create assessment</button></div>
+        <div id="notesTab" class="tab-panel">
+          <div class="form-layout">
+            <div class="card form-card">
+              <h2>Notes brief</h2><p class="hint">The prototype creates sample output to demonstrate the UI and complete flow. No real AI or web search is connected.</p>
+              <form id="notesForm">
+                <div class="field"><label for="notesTopic">Topic or chapter *</label><input id="notesTopic" required value="Python Functions" placeholder="e.g. Database Normalization"></div>
+                <div class="form-grid">
+                  <div class="field"><label for="notesCourse">Course</label><select id="notesCourse"><option>Python Programming</option><option>Data Structures</option><option>Database Management</option><option>Machine Learning</option><option>Web Development</option></select></div>
+                  <div class="field"><label for="notesLevel">Learning level</label><select id="notesLevel"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select></div>
+                  <div class="field"><label for="notesLength">Detail level</label><select id="notesLength"><option>Quick revision</option><option selected>Detailed notes</option><option>In-depth reference</option></select></div>
+                  <div class="field"><label for="notesLanguage">Language</label><select id="notesLanguage"><option>English</option><option>Hindi</option><option>Hinglish</option></select></div>
+                </div>
+                <div class="field"><label for="notesRequirements">Specific requirements</label><textarea id="notesRequirements" placeholder="Examples, learning outcomes, diagrams, references…">Include clear definitions, examples, common mistakes, a summary, and practice questions.</textarea></div>
+                <label class="check-row"><input type="checkbox" id="notesDiagrams" checked><span>Include relevant diagrams or flowcharts.</span></label>
+                <label class="check-row"><input type="checkbox" id="notesQuestions" checked><span>Include practice questions with solutions.</span></label>
+                <label class="check-row"><input type="checkbox" id="notesCitations" checked><span>Keep source references and mark claims requiring verification.</span></label>
+                <button class="btn btn-primary" type="submit">Generate notes draft ↗</button>
+              </form>
+            </div>
+            <div>
+              <div class="card aside-box"><h3>Content quality gates</h3><div class="step-list">
+                <div class="step"><span class="step-number">1</span><div><strong>Research and synthesize</strong><p>Build original explanations from appropriate sources.</p></div></div>
+                <div class="step"><span class="step-number">2</span><div><strong>Validate content</strong><p>Check structure, coverage, evidence and answer consistency.</p></div></div>
+                <div class="step"><span class="step-number">3</span><div><strong>Faculty approval</strong><p>Review and approve before final publication.</p></div></div>
+                <div class="step"><span class="step-number">4</span><div><strong>Export PDF</strong><p>Render a readable document with a version record.</p></div></div>
+              </div></div>
+              <div class="card output-box"><h3>Notes preview</h3><div id="notesOutput" class="output-placeholder"><div class="big">▤</div><strong>No draft generated yet</strong><p>Your simulated notes draft will appear here after submission.</p></div></div>
+            </div>
+          </div>
+        </div>
+        <div id="assessmentTab" class="tab-panel hidden">
+          <div class="form-layout">
+            <div class="card form-card">
+              <h2>Assessment brief</h2><p class="hint">Configure a test paper with a reviewable answer key and scoring outline.</p>
+              <form id="assessmentForm">
+                <div class="field"><label for="assessmentTitle">Assessment title *</label><input id="assessmentTitle" required value="Python Fundamentals — Practice Test"></div>
+                <div class="form-grid">
+                  <div class="field"><label for="assessmentCourse">Course</label><select id="assessmentCourse"><option>Python Programming</option><option>Data Structures</option><option>Database Management</option><option>Machine Learning</option></select></div>
+                  <div class="field"><label for="assessmentType">Question format</label><select id="assessmentType"><option>Mixed (MCQ + short answer)</option><option>Multiple choice</option><option>Coding questions</option><option>Short answer</option></select></div>
+                  <div class="field"><label for="questionCount">Number of questions</label><select id="questionCount"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+                  <div class="field"><label for="difficulty">Difficulty</label><select id="difficulty"><option>Easy</option><option selected>Mixed</option><option>Intermediate</option><option>Advanced</option></select></div>
+                  <div class="field"><label for="testMarks">Total marks</label><input type="number" id="testMarks" min="1" value="20"></div>
+                  <div class="field"><label for="testTime">Time limit (minutes)</label><input type="number" id="testTime" min="1" value="30"></div>
+                </div>
+                <div class="field"><label for="assessmentTopics">Topics to cover</label><textarea id="assessmentTopics">Variables, data types, conditions, loops, functions</textarea></div>
+                <label class="check-row"><input type="checkbox" id="answerKey" checked><span>Include answer key and explanations.</span></label>
+                <label class="check-row"><input type="checkbox" id="approvalRequired" checked><span>Require faculty approval before publication.</span></label>
+                <button class="btn btn-primary" type="submit">Generate assessment draft ↗</button>
+              </form>
+            </div>
+            <div>
+              <div class="card aside-box"><h3>Assessment validation</h3><div class="step-list">
+                <div class="step"><span class="step-number">1</span><div><strong>Coverage and difficulty</strong><p>Match questions to the selected topics and level.</p></div></div>
+                <div class="step"><span class="step-number">2</span><div><strong>Answer and marks check</strong><p>Check answer key, explanations and marks total.</p></div></div>
+                <div class="step"><span class="step-number">3</span><div><strong>Faculty review</strong><p>Keep the assessment as a draft until approved.</p></div></div>
+              </div></div>
+              <div class="card output-box"><h3>Assessment preview</h3><div id="assessmentOutput" class="output-placeholder"><div class="big">☷</div><strong>No assessment generated yet</strong><p>Complete the brief to generate a simulated test package.</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPROVALS -->
+      <section class="page" id="page-approvals">
+        <div class="page-heading"><div><div class="eyebrow">HUMAN REVIEW</div><h1>Review &amp; Approvals</h1><p class="lead">Review generated resources before they become approved, publishable versions.</p></div><div class="heading-actions"><span class="badge pending" id="approvalSummary">2 items awaiting review</span></div></div>
+        <div class="card">
+          <div class="card-header"><div><h2>Approval queue</h2><p>Approve, request changes, or reject a draft. Prototype actions are stored in this browser session only.</p></div><select id="approvalFilter" style="border:1px solid var(--line);border-radius:8px;padding:8px;font-size:11px" onchange="renderApprovals()"><option value="all">All items</option><option value="pending">Awaiting review</option><option value="approved">Approved</option><option value="changes">Changes requested</option><option value="rejected">Rejected</option></select></div>
+          <div class="card-body" id="approvalList"></div>
+        </div>
+      </section>
+
+      <!-- COURSES -->
+      <section class="page" id="page-courses">
+        <div class="page-heading"><div><div class="eyebrow">ACADEMIC MANAGEMENT</div><h1>Courses &amp; Progress</h1><p class="lead">Track course progress, syllabus coverage, planned milestones and topics that need attention.</p></div><div class="heading-actions"><button class="btn btn-primary" onclick="openCourseModal()">＋ Add course</button></div></div>
+        <div class="grid stats">
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Active courses</span><span class="stat-icon">▣</span></div><div class="stat-value" id="courseCount">08</div><div class="stat-foot">Current academic cycle</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Average progress</span><span class="stat-icon">◴</span></div><div class="stat-value">68%</div><div class="stat-foot">Sample aggregate</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Topics behind plan</span><span class="stat-icon">!</span></div><div class="stat-value">02</div><div class="stat-foot">Requires review</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Completed this month</span><span class="stat-icon">✓</span></div><div class="stat-value">18</div><div class="stat-foot">Sample sessions</div></div>
+        </div>
+        <div class="card"><div class="card-header"><div><h2>Course tracker</h2><p>Progress values are illustrative and editable in this prototype.</p></div><input id="courseSearch" placeholder="Filter courses…" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px" oninput="renderCourses()"></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Course</th><th>Faculty owner</th><th>Progress</th><th>Next milestone</th><th>Status</th><th>Action</th></tr></thead><tbody id="courseTable"></tbody></table></div></div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="page" id="page-schedule">
+        <div class="page-heading"><div><div class="eyebrow">ACADEMIC MANAGEMENT</div><h1>Academic Schedule</h1><p class="lead">A lightweight calendar prototype for sessions, deadlines, and course milestones.</p></div><div class="heading-actions"><button class="btn btn-primary" onclick="openScheduleModal()">＋ Add event</button></div></div>
+        <div class="card"><div class="card-header"><div><h2 id="calendarTitle">October 2026</h2><p>Sample schedule · Local prototype only</p></div><div class="table-actions"><button class="btn btn-secondary btn-small" onclick="changeMonth(-1)">← Prev</button><button class="btn btn-secondary btn-small" onclick="changeMonth(1)">Next →</button></div></div><div class="card-body"><div class="calendar" id="calendarGrid"></div></div></div>
+        <div class="card section-gap"><div class="card-header"><div><h2>Upcoming events</h2><p>Created events appear here.</p></div></div><div class="card-body" id="eventList"></div></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="page" id="page-reports">
+        <div class="page-heading"><div><div class="eyebrow">ACADEMIC INTELLIGENCE</div><h1>Reports</h1><p class="lead">Generate management summaries from academic progress, workload and schedule data. This prototype uses sample data.</p></div><div class="heading-actions"><button class="btn btn-secondary" onclick="window.print()">Print current page</button></div></div>
+        <div class="grid report-grid">
+          <div class="card report-card"><div class="report-icon">◴</div><h3>Syllabus Progress Report</h3><p>Planned vs. completed syllabus coverage, pending topics, and course-level progress.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Syllabus Progress Report')">Generate report</button></div>
+          <div class="card report-card"><div class="report-icon">♙</div><h3>Faculty Workload Summary</h3><p>Assigned courses, scheduled sessions, workload distribution, and capacity flags.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Faculty Workload Summary')">Generate report</button></div>
+          <div class="card report-card"><div class="report-icon">▦</div><h3>Academic Activity Report</h3><p>Session completion, upcoming milestones, delays, and recent academic activity.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Academic Activity Report')">Generate report</button></div>
+          <div class="card report-card"><div class="report-icon">☷</div><h3>Assessment Overview</h3><p>Assessment count, review status, topic coverage, and readiness for publication.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Assessment Overview')">Generate report</button></div>
+          <div class="card report-card"><div class="report-icon">✓</div><h3>Approval Audit Summary</h3><p>Review decisions, approver, timestamps, and current resource status.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Approval Audit Summary')">Generate report</button></div>
+          <div class="card report-card"><div class="report-icon">◷</div><h3>Workflow Reliability</h3><p>Task outcomes, failed stages, retries, and processing status.</p><button class="btn btn-secondary btn-small" onclick="generateReport('Workflow Reliability')">Generate report</button></div>
+        </div>
+        <div class="card section-gap hidden" id="reportResultCard"><div class="card-header"><div><h2 id="reportResultTitle">Report preview</h2><p>Simulated output · Not institutional data</p></div><button class="btn btn-secondary btn-small" onclick="downloadReport()">Download CSV</button></div><div class="card-body" id="reportResult"></div></div>
+      </section>
+
+      <!-- TASKS -->
+      <section class="page" id="page-tasks">
+        <div class="page-heading"><div><div class="eyebrow">WORKFLOW OPERATIONS</div><h1>Task Center</h1><p class="lead">Monitor draft generation, background jobs, approvals and recoverable failures from one place.</p></div><div class="heading-actions"><button class="btn btn-secondary" onclick="refreshTasks()">↻ Refresh tasks</button></div></div>
+        <div class="grid stats">
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">All tasks</span><span class="stat-icon">◷</span></div><div class="stat-value" id="taskTotal">03</div><div class="stat-foot">Saved in this prototype</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Running</span><span class="stat-icon">↻</span></div><div class="stat-value" id="taskRunning">01</div><div class="stat-foot">Simulated processing</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Needs review</span><span class="stat-icon">✓</span></div><div class="stat-value" id="taskReview">02</div><div class="stat-foot">Faculty action required</div></div>
+          <div class="card stat-card"><div class="stat-top"><span class="stat-label">Failed</span><span class="stat-icon">!</span></div><div class="stat-value" id="taskFailed">00</div><div class="stat-foot">No sample failures</div></div>
+        </div>
+        <div class="card"><div class="card-header"><div><h2>All workflow tasks</h2><p>Retry and recovery behavior is simulated, not connected to a worker.</p></div><select id="taskFilter" onchange="renderTasks()" style="border:1px solid var(--line);border-radius:8px;padding:8px;font-size:11px"><option value="all">All statuses</option><option value="Running">Running</option><option value="Needs review">Needs review</option><option value="Completed">Completed</option><option value="Failed">Failed</option></select></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Task</th><th>Type</th><th>Created</th><th>Status</th><th>Progress</th><th>Action</th></tr></thead><tbody id="taskTable"></tbody></table></div></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="page-heading"><div><div class="eyebrow">WORKSPACE PREFERENCES</div><h1>Settings</h1><p class="lead">Change the sample profile and workspace labels for this browser prototype.</p></div></div>
+        <div class="form-layout">
+          <div class="card form-card"><h2>Workspace settings</h2><p class="hint">These fields only update the local prototype UI. They do not create real accounts or institutions.</p>
+            <form id="settingsForm">
+              <div class="field"><label for="settingName">Display name</label><input id="settingName" value="Ayan Mansoori"></div>
+              <div class="field"><label for="settingRole">Role</label><select id="settingRole"><option>Faculty</option><option>Management</option><option>Admin</option></select></div>
+              <div class="field"><label for="settingInstitution">Institution name</label><input id="settingInstitution" value="Northstar Learning Institute"></div>
+              <button class="btn btn-primary" type="submit">Save preferences</button>
+            </form>
+          </div>
+          <div class="card aside-box"><h3>Prototype boundaries</h3>
+            <div class="notice"><div class="notice-icon">ⓘ</div><div><strong>Sample data only</strong><p>All course progress, tasks, users and report values are illustrative.</p></div></div>
+            <div class="notice"><div class="notice-icon">⌁</div><div><strong>No backend connected</strong><p>Authentication, web research, AI generation, file storage and institution permissions require backend integration.</p></div></div>
+            <div class="notice"><div class="notice-icon">✓</div><div><strong>Interaction demo</strong><p>Navigation, forms, approval actions, filters, report preview and simulated downloads work in this HTML prototype.</p></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="toastRegion" class="toast-region" aria-live="polite"></div>
+<div id="modalRoot" class="hidden"></div>
+<script>
+const $ = (id)=>document.getElementById(id);
+const state = {
+  currentPage:'dashboard',
+  approvals:[
+    {id:1,title:'Python Functions — Learning Notes',type:'Notes document',course:'Python Programming',created:'20 Oct 2026',status:'pending',details:'Detailed notes with examples, diagrams and practice questions. Source verification is marked for faculty review.'},
+    {id:2,title:'Data Structures — Practice Assessment',type:'Assessment',course:'Data Structures',created:'19 Oct 2026',status:'pending',details:'A mixed-format test with answer key, explanations, difficulty levels and a 30-minute time limit.'}
+  ],
+  tasks:[
+    {id:1,title:'Python curriculum draft',type:'Curriculum',created:'20 Oct, 10:15 AM',status:'Running',progress:62},
+    {id:2,title:'Python Functions — Learning Notes',type:'Notes',created:'20 Oct, 9:45 AM',status:'Needs review',progress:100},
+    {id:3,title:'Data Structures — Practice Assessment',type:'Assessment',created:'19 Oct, 3:20 PM',status:'Needs review',progress:100}
+  ],
+  courses:[
+    {name:'Python Programming',owner:'Ayan Mansoori',progress:68,milestone:'Functions & modules',status:'Behind plan'},
+    {name:'Data Structures',owner:'Ayan Mansoori',progress:74,milestone:'Trees and graphs',status:'On track'},
+    {name:'Database Management',owner:'Neha Sharma',progress:82,milestone:'Transactions',status:'On track'},
+    {name:'Machine Learning',owner:'Rohit Verma',progress:48,milestone:'Model evaluation',status:'Needs attention'},
+    {name:'Web Development',owner:'Ayan Mansoori',progress:91,milestone:'Deployment',status:'On track'},
+    {name:'Computer Networks',owner:'Neha Sharma',progress:56,milestone:'Transport layer',status:'On track'},
+    {name:'Operating Systems',owner:'Rohit Verma',progress:63,milestone:'Memory management',status:'On track'},
+    {name:'Software Engineering',owner:'Neha Sharma',progress:58,milestone:'Testing strategies',status:'On track'}
+  ],
+  events:[
+    {date:'2026-10-21',title:'Python Functions',time:'10:00 AM',type:'Lecture'},
+    {date:'2026-10-22',title:'Data Structures Quiz',time:'12:00 PM',type:'Assessment'},
+    {date:'2026-10-26',title:'Syllabus Review',time:'2:00 PM',type:'Planning'},
+    {date:'2026-10-28',title:'Academic Report Due',time:'4:00 PM',type:'Deadline'}
+  ],
+  generatedReports:[],
+  calendarYear:2026,calendarMonth:9
+};
+const pageNames={dashboard:'Dashboard',curriculum:'Curriculum Designer',notes:'Notes & Assessments',approvals:'Review & Approvals',courses:'Courses & Progress',schedule:'Academic Schedule',reports:'Reports',tasks:'Task Center',settings:'Settings'};
+function navigate(page){
+  if(!pageNames[page]) return;
+  state.currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
+  syncNavActive(page);
+  $('breadcrumbTitle').textContent=pageNames[page];
+  toggleSidebar(false);
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(page==='approvals')renderApprovals();
+  if(page==='courses')renderCourses();
+  if(page==='tasks')renderTasks();
+  if(page==='schedule'){renderCalendar();renderEvents();}
+  if(page==='dashboard')renderDashboard();
+}
+document.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
+function syncNavActive(page){
+  document.querySelectorAll('button[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+}
+function enableSidebarDragSort(){
+  const nav=$('utilityNav'); if(!nav) return;
+  try{
+    const order=JSON.parse(localStorage.getItem('edumoreUtilityOrder')||'[]');
+    order.forEach(id=>{const btn=nav.querySelector(`[data-page="${id}"]`);if(btn)nav.appendChild(btn);});
+  }catch(e){localStorage.removeItem('edumoreUtilityOrder');}
+  let dragged=null;
+  nav.querySelectorAll('button[draggable="true"]').forEach(btn=>{
+    btn.addEventListener('dragstart',e=>{dragged=btn;btn.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',btn.dataset.page);});
+    btn.addEventListener('dragend',()=>{btn.classList.remove('dragging');nav.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));dragged=null;});
+    btn.addEventListener('dragover',e=>{e.preventDefault();if(dragged&&dragged!==btn)btn.classList.add('drop-target');});
+    btn.addEventListener('dragleave',()=>btn.classList.remove('drop-target'));
+    btn.addEventListener('drop',e=>{
+      e.preventDefault();btn.classList.remove('drop-target');if(!dragged||dragged===btn)return;
+      const rect=btn.getBoundingClientRect(),after=e.clientY>rect.top+rect.height/2;
+      nav.insertBefore(dragged,after?btn.nextSibling:btn);
+      localStorage.setItem('edumoreUtilityOrder',JSON.stringify([...nav.querySelectorAll('button[data-page]')].map(x=>x.dataset.page)));
+      toast('Sidebar tools reordered and saved in this browser.');
+    });
+  });
+}
+enableSidebarDragSort();
+function toggleSidebar(force){
+  const side=$('sidebar'),overlay=$('mobileOverlay');
+  const open=typeof force==='boolean'?force:!side.classList.contains('open');
+  side.classList.toggle('open',open);overlay.classList.toggle('show',open);
+}
+function toast(message,type='success'){
+  const el=document.createElement('div');el.className='toast'+(type==='error'?' error':'');el.textContent=message;
+  $('toastRegion').appendChild(el);setTimeout(()=>el.remove(),3800);
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function statusBadge(status){
+  const cls=status==='Approved'||status==='Completed'?'ready':status==='Failed'||status==='Rejected'?'pending':status==='Running'?'progress':status==='Changes requested'?'pending':status==='Needs review'||status==='Awaiting review'?'pending':'draft';
+  return `<span class="badge ${cls}">${escapeHTML(status.toUpperCase())}</span>`;
+}
+function renderDashboard(){
+  $('statApprovals').textContent=String(state.approvals.filter(a=>a.status==='pending').length).padStart(2,'0');
+  $('approvalNavCount').textContent=state.approvals.filter(a=>a.status==='pending').length;
+  $('statTasks').textContent=String(state.tasks.filter(t=>t.status==='Running'||t.status==='Needs review').length).padStart(2,'0');
+  $('statCourses').textContent=String(state.courses.length).padStart(2,'0');
+  $('recentTasks').innerHTML=state.tasks.slice(0,4).map(t=>`<div class="task-row"><div class="task-symbol">${t.type==='Notes'?'▤':t.type==='Assessment'?'☷':'⌘'}</div><div class="task-info"><strong>${escapeHTML(t.title)}</strong><small>${escapeHTML(t.created)} · ${escapeHTML(t.type)}</small></div>${statusBadge(t.status)}</div>`).join('')||'<div class="empty">No tasks yet.</div>';
+  $('dashboardCourses').innerHTML=state.courses.slice(0,4).map(c=>`<div class="course-item"><div class="course-title"><span>${escapeHTML(c.name)}</span><span>${c.progress}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${c.progress}%"></div></div><div class="course-meta"><span>${escapeHTML(c.milestone)}</span><span>${escapeHTML(c.status)}</span></div></div>`).join('');
+}
+function renderApprovals(){
+  const filter=$('approvalFilter')?.value||'all';
+  const items=state.approvals.filter(a=>filter==='all'||a.status===filter);
+  $('approvalSummary').textContent=state.approvals.filter(a=>a.status==='pending').length+' items awaiting review';
+  $('approvalNavCount').textContent=state.approvals.filter(a=>a.status==='pending').length;
+  if(!items.length){$('approvalList').innerHTML='<div class="empty">No items match this filter.</div>';return;}
+  $('approvalList').innerHTML=items.map(a=>`<div class="approval-item"><div class="doc-icon">${a.type==='Assessment'?'☷':'▤'}</div><div class="approval-content"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><h3>${escapeHTML(a.title)}</h3>${statusBadge(a.status==='pending'?'Awaiting review':a.status==='changes'?'Changes requested':a.status==='approved'?'Approved':'Rejected')}</div><p>${escapeHTML(a.details)}<br><b>Course:</b> ${escapeHTML(a.course)} &nbsp;·&nbsp; <b>Created:</b> ${escapeHTML(a.created)}</p><div class="approval-actions">${a.status==='pending'?`<button class="btn btn-primary btn-small" onclick="decideApproval(${a.id},'approved')">✓ Approve</button><button class="btn btn-secondary btn-small" onclick="decideApproval(${a.id},'changes')">Request changes</button><button class="btn btn-secondary btn-small" onclick="decideApproval(${a.id},'rejected')">Reject</button>`:`<button class="btn btn-secondary btn-small" onclick="resetApproval(${a.id})">Reopen review</button>`}<button class="btn btn-secondary btn-small" onclick="previewApproval(${a.id})">Preview</button></div></div></div>`).join('');
+}
+function decideApproval(id,status){
+  const a=state.approvals.find(x=>x.id===id);if(!a)return;
+  a.status=status;
+  if(status==='approved'){
+    state.tasks.forEach(t=>{if(t.title===a.title)t.status='Completed';});
+    toast('Approved in prototype. This does not publish to a real system.');
+  }else if(status==='changes'){toast('Changes requested. Draft remains unpublished.');}
+  else toast('Draft rejected. No publication occurred.');
+  renderApprovals();renderDashboard();renderTasks();
+}
+function resetApproval(id){const a=state.approvals.find(x=>x.id===id);if(a){a.status='pending';renderApprovals();toast('Item returned to the review queue.');}}
+function previewApproval(id){
+  const a=state.approvals.find(x=>x.id===id);if(!a)return;
+  showModal('Draft preview',`${a.title}\n\n${a.details}\n\nPrototype preview only. The actual generated document is not connected.`,[{label:'Close',className:'btn-secondary',action:closeModal}]);
+}
+function addApproval(title,type,course,details){
+  const id=Math.max(0,...state.approvals.map(a=>a.id))+1;
+  state.approvals.unshift({id,title,type,course,created:'20 Oct 2026',status:'pending',details});
+  state.tasks.unshift({id:Math.max(0,...state.tasks.map(t=>t.id))+1,title,type:type==='Assessment'?'Assessment':'Notes',created:'Just now',status:'Needs review',progress:100});
+  renderDashboard();renderApprovals();renderTasks();
+}
+function addTask(title,type,status='Running',progress=15){
+  state.tasks.unshift({id:Math.max(0,...state.tasks.map(t=>t.id))+1,title,type,created:'Just now',status,progress});
+  renderTasks();renderDashboard();
+}
+function renderTasks(){
+  const filter=$('taskFilter')?.value||'all';
+  const items=state.tasks.filter(t=>filter==='all'||t.status===filter);
+  $('taskTotal').textContent=String(state.tasks.length).padStart(2,'0');
+  $('taskRunning').textContent=String(state.tasks.filter(t=>t.status==='Running').length).padStart(2,'0');
+  $('taskReview').textContent=String(state.tasks.filter(t=>t.status==='Needs review').length).padStart(2,'0');
+  $('taskFailed').textContent=String(state.tasks.filter(t=>t.status==='Failed').length).padStart(2,'0');
+  $('taskTable').innerHTML=items.map(t=>`<tr><td><strong>${escapeHTML(t.title)}</strong></td><td>${escapeHTML(t.type)}</td><td>${escapeHTML(t.created)}</td><td>${statusBadge(t.status)}</td><td><div style="display:flex;align-items:center;gap:8px;min-width:100px"><div class="progress-track" style="flex:1"><div class="progress-fill" style="width:${t.progress}%"></div></div><small>${t.progress}%</small></div></td><td><div class="table-actions">${t.status==='Failed'?`<button class="btn btn-secondary btn-small" onclick="retryTask(${t.id})">Retry</button>`:t.status==='Needs review'?`<button class="btn btn-secondary btn-small" onclick="navigate('approvals')">Review</button>`:t.status==='Running'?`<button class="btn btn-secondary btn-small" onclick="completeTask(${t.id})">Simulate finish</button>`:`<button class="btn btn-secondary btn-small" onclick="taskDetails(${t.id})">Details</button>`}</div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No tasks match this filter.</td></tr>';
+}
+function retryTask(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.status='Running';t.progress=10;renderTasks();toast('Retry simulated. Real background recovery needs a backend.');}
+function completeTask(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.progress=100;t.status='Completed';renderTasks();renderDashboard();toast('Task marked completed in the prototype.');}
+function taskDetails(id){const t=state.tasks.find(x=>x.id===id);if(t)showModal('Task details',`${t.title}\nStatus: ${t.status}\nProgress: ${t.progress}%\n\nPrototype task only. Real logs and correlation IDs will come from the backend.`,[{label:'Close',className:'btn-secondary',action:closeModal}]);}
+function refreshTasks(){renderTasks();toast('Task list refreshed from local prototype state.');}
+function renderCourses(){
+  const q=($('courseSearch')?.value||'').toLowerCase();
+  const rows=state.courses.filter(c=>(c.name+' '+c.owner+' '+c.milestone).toLowerCase().includes(q));
+  $('courseTable').innerHTML=rows.map((c,i)=>`<tr><td><strong>${escapeHTML(c.name)}</strong></td><td>${escapeHTML(c.owner)}</td><td><div style="display:flex;align-items:center;gap:9px;min-width:110px"><div class="progress-track" style="flex:1"><div class="progress-fill" style="width:${c.progress}%"></div></div><b>${c.progress}%</b></div></td><td>${escapeHTML(c.milestone)}</td><td>${statusBadge(c.status==='On track'?'Completed':c.status==='Behind plan'?'Needs review':c.status)}</td><td><button class="btn btn-secondary btn-small" onclick="editCourse(${state.courses.indexOf(c)})">Update</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No courses found.</td></tr>';
+  $('courseCount').textContent=String(state.courses.length).padStart(2,'0');$('statCourses').textContent=String(state.courses.length).padStart(2,'0');
+}
+function openCourseModal(){
+  showModal('Add course','Add a sample course to the prototype workspace.',[
+    {label:'Cancel',className:'btn-secondary',action:closeModal},
+    {label:'Add course',className:'btn-primary',action:()=>{const name=$('modalCourseName')?.value.trim();if(!name){toast('Enter a course name first.','error');return;}state.courses.push({name,owner:$('userLabel').textContent,progress:0,milestone:'Define first milestone',status:'On track'});closeModal();renderCourses();renderDashboard();toast('Course added to local prototype.');}}
+  ],'<div class="field"><label for="modalCourseName">Course name</label><input id="modalCourseName" placeholder="e.g. Artificial Intelligence"></div>');
+}
+function editCourse(index){
+  const c=state.courses[index];if(!c)return;
+  showModal('Update course progress',`Update progress for ${c.name}.`,[
+    {label:'Cancel',className:'btn-secondary',action:closeModal},
+    {label:'Save update',className:'btn-primary',action:()=>{const val=Number($('modalProgress')?.value);const milestone=$('modalMilestone')?.value.trim();if(!Number.isFinite(val)||val<0||val>100){toast('Progress must be between 0 and 100.','error');return;}c.progress=val;if(milestone)c.milestone=milestone;c.status=val>=100?'Completed':val<50?'Needs attention':'On track';closeModal();renderCourses();renderDashboard();toast('Course progress updated locally.');}}
+  ,`<div class="field"><label for="modalProgress">Progress (0–100)</label><input id="modalProgress" type="number" min="0" max="100" value="${c.progress}"></div><div class="field"><label for="modalMilestone">Next milestone</label><input id="modalMilestone" value="${escapeHTML(c.milestone)}"></div>`);
+}
+function openAssessment(){navigate('notes');document.querySelector('[data-tab="assessmentTab"]').click();}
+$('curriculumForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const course=$('courseName').value.trim();if(!course){toast('Enter a course name.','error');return;}
+  addTask(course+' curriculum draft','Curriculum','Running',20);
+  $('curriculumOutput').className='output-result';
+  $('curriculumOutput').innerHTML=`<span class="badge pending">DRAFT · SIMULATED</span><h3 style="margin-top:12px">${escapeHTML(course)} learning roadmap</h3><p>${escapeHTML($('learnerLevel').value)} level · ${escapeHTML($('duration').value)} · ${escapeHTML($('weeklyHours').value)} weekly</p><div class="result-section"><strong>01 · Foundations</strong><p>Core concepts, vocabulary, setup and guided examples.</p></div><div class="result-section"><strong>02 · Core skills</strong><p>Structured practice, common patterns, debugging and checkpoints.</p></div><div class="result-section"><strong>03 · Applied learning</strong><p>Mini-projects, practical scenarios and peer/faculty feedback.</p></div><div class="result-section"><strong>04 · Capstone and review</strong><p>Final project, revision, assessment and completion review.</p></div><div class="result-section"><strong>Research status</strong><p>Live research is not connected. Sources must be retrieved and verified by the future backend before this draft can be considered evidence-based.</p></div><div class="result-actions"><button class="btn btn-primary btn-small" onclick="submitCurriculumForReview('${escapeHTML(course).replace(/'/g,"\\'")}')">Send for faculty review</button><button class="btn btn-secondary btn-small" onclick="downloadText('curriculum-draft.txt', $('curriculumOutput').innerText)">Download draft</button></div>`;
+  toast('Sample curriculum draft generated. Live research is not connected.');
+});
+function submitCurriculumForReview(course){
+  addApproval(course+' — Curriculum Draft','Curriculum',course,'Simulated curriculum with modules, milestones and learning outcomes. Live source verification is not connected.');
+  toast('Curriculum added to the review queue.');
+}
+$('notesForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const topic=$('notesTopic').value.trim();if(!topic){toast('Enter a topic or chapter.','error');return;}
+  const course=$('notesCourse').value;
+  addTask(topic+' notes draft','Notes','Running',25);
+  const diagram=$('notesDiagrams').checked,questions=$('notesQuestions').checked;
+  $('notesOutput').className='output-result';
+  $('notesOutput').innerHTML=`<span class="badge pending">DRAFT · SIMULATED</span><h3 style="margin-top:12px">${escapeHTML(topic)}</h3><p>${escapeHTML(course)} · ${escapeHTML($('notesLevel').value)} · ${escapeHTML($('notesLength').value)}</p><div class="result-section"><strong>1. Learning objectives</strong><p>Explain the key concepts of ${escapeHTML(topic)}, recognize when to apply them, and solve basic practical problems.</p></div><div class="result-section"><strong>2. Core concepts</strong><p>Define the main terms, explain how the concepts work, and show a step-by-step example. Actual content must be generated and validated by the backend.</p></div><div class="result-section"><strong>3. Examples and common mistakes</strong><p>Include worked examples, common misconceptions, and a short troubleshooting checklist.</p></div>${diagram?'<div class="result-section"><strong>4. Diagram plan</strong><p>Include a code-based flowchart or technical diagram where it improves understanding.</p></div>':''}${questions?'<div class="result-section"><strong>5. Practice questions</strong><p>Include recall, application, and scenario-based questions with reviewed solutions.</p></div>':''}<div class="result-section"><strong>Source and quality status</strong><p>Unverified prototype content. Real research, citation checks and answer validation are not connected.</p></div><div class="result-actions"><button class="btn btn-primary btn-small" onclick="submitNotesForReview('${escapeHTML(topic).replace(/'/g,"\\'")}','${escapeHTML(course).replace(/'/g,"\\'")}')">Send for faculty review</button><button class="btn btn-secondary btn-small" onclick="downloadText('notes-draft.txt', $('notesOutput').innerText)">Download draft</button></div>`;
+  toast('Sample notes draft generated. It is not verified educational content.');
+});
+function submitNotesForReview(topic,course){addApproval(topic+' — Learning Notes','Notes',course,'Prototype notes draft with learning objectives, core concepts, example plan, and optional diagrams/questions. Source verification is not connected.');toast('Notes added to the faculty review queue.');}
+$('assessmentForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const title=$('assessmentTitle').value.trim();if(!title){toast('Enter an assessment title.','error');return;}
+  const count=Number($('questionCount').value),marks=Number($('testMarks').value),mins=Number($('testTime').value);
+  if(marks<1||mins<1){toast('Marks and time must be greater than zero.','error');return;}
+  addTask(title,'Assessment','Running',25);
+  $('assessmentOutput').className='output-result';
+  $('assessmentOutput').innerHTML=`<span class="badge pending">DRAFT · SIMULATED</span><h3 style="margin-top:12px">${escapeHTML(title)}</h3><p>${escapeHTML($('assessmentCourse').value)} · ${escapeHTML($('assessmentType').value)}</p><div class="result-section"><strong>Assessment settings</strong><p>${count} questions · ${marks} marks · ${mins} minutes · ${escapeHTML($('difficulty').value)} difficulty</p></div><div class="result-section"><strong>Topic coverage</strong><p>${escapeHTML($('assessmentTopics').value)}</p></div><div class="result-section"><strong>Question plan</strong><p>Mix recall and application questions, include clear instructions, and distribute marks across the selected topics.</p></div>${$('answerKey').checked?'<div class="result-section"><strong>Answer key</strong><p>Answer key and explanations are requested. Actual answers need generation and validation by the backend.</p></div>':''}<div class="result-section"><strong>Validation status</strong><p>Marks/time inputs validated. Question correctness, duplicate detection and topic coverage have not been checked by a real AI service.</p></div><div class="result-actions"><button class="btn btn-primary btn-small" onclick="submitAssessmentForReview('${escapeHTML(title).replace(/'/g,"\\'")}','${escapeHTML($('assessmentCourse').value).replace(/'/g,"\\'")}')">Send for faculty review</button><button class="btn btn-secondary btn-small" onclick="downloadText('assessment-draft.txt', $('assessmentOutput').innerText)">Download draft</button></div>`;
+  toast('Sample assessment package generated. Not ready for real publication.');
+});
+function submitAssessmentForReview(title,course){addApproval(title,'Assessment',course,'Prototype assessment package with configured question count, topics, marks, time limit and answer-key request. Questions are not actually generated or validated.');toast('Assessment added to the review queue.');}
+document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('hidden',p.id!==btn.dataset.tab));
+}));
+function renderCalendar(){
+  const y=state.calendarYear,m=state.calendarMonth;
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  $('calendarTitle').textContent=first.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  let html=days.map(d=>`<div class="day-head">${d}</div>`).join('');
+  const start=first.getDay(),prevLast=new Date(y,m,0).getDate();
+  for(let i=0;i<start;i++)html+=`<div class="day muted">${prevLast-start+i+1}</div>`;
+  const todayKey='2026-10-20';
+  for(let d=1;d<=last.getDate();d++){
+    const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ev=state.events.filter(e=>e.date===key);
+    html+=`<div class="day ${key===todayKey?'today':''}">${d}${ev.map(e=>`<div class="event" title="${escapeHTML(e.title)}">${escapeHTML(e.title)}</div>`).join('')}</div>`;
+  }
+  const total=start+last.getDate(),tail=(7-total%7)%7;
+  for(let d=1;d<=tail;d++)html+=`<div class="day muted">${d}</div>`;
+  $('calendarGrid').innerHTML=html;
+}
+function changeMonth(delta){state.calendarMonth+=delta;if(state.calendarMonth<0){state.calendarMonth=11;state.calendarYear--;}if(state.calendarMonth>11){state.calendarMonth=0;state.calendarYear++;}renderCalendar();}
+function renderEvents(){
+  const sorted=[...state.events].sort((a,b)=>a.date.localeCompare(b.date));
+  $('eventList').innerHTML=sorted.map(e=>`<div class="task-row"><div class="task-symbol">▦</div><div class="task-info"><strong>${escapeHTML(e.title)}</strong><small>${escapeHTML(e.date)} · ${escapeHTML(e.time)} · ${escapeHTML(e.type)}</small></div><button class="btn btn-secondary btn-small" onclick="removeEvent('${e.date}','${escapeHTML(e.title).replace(/'/g,"\\'")}')">Remove</button></div>`).join('')||'<div class="empty">No upcoming events.</div>';
+}
+function openScheduleModal(){
+  showModal('Add schedule event','Create an event in the local calendar prototype.',[
+    {label:'Cancel',className:'btn-secondary',action:closeModal},
+    {label:'Add event',className:'btn-primary',action:()=>{const title=$('modalEventTitle')?.value.trim(),date=$('modalEventDate')?.value,time=$('modalEventTime')?.value,type=$('modalEventType')?.value;if(!title||!date||!time){toast('Complete event title, date and time.','error');return;}state.events.push({date,title,time,type});closeModal();renderCalendar();renderEvents();toast('Event added to local calendar.');}}
+  ,`<div class="field"><label for="modalEventTitle">Event title</label><input id="modalEventTitle" placeholder="e.g. Midterm review"></div><div class="form-grid"><div class="field"><label for="modalEventDate">Date</label><input id="modalEventDate" type="date" value="2026-10-29"></div><div class="field"><label for="modalEventTime">Time</label><input id="modalEventTime" type="time" value="10:00"></div></div><div class="field"><label for="modalEventType">Event type</label><select id="modalEventType"><option>Lecture</option><option>Assessment</option><option>Planning</option><option>Deadline</option></select></div>`);
+}
+function removeEvent(date,title){state.events=state.events.filter(e=>!(e.date===date&&e.title===title));renderCalendar();renderEvents();toast('Event removed from local prototype.');}
+function generateReport(title){
+  state.generatedReports.unshift({title,date:'20 Oct 2026',status:'Draft'});
+  $('reportResultCard').classList.remove('hidden');$('reportResultTitle').textContent=title;
+  const rows=[
+    ['Report type',title],['Reporting period','October 2026'],['Courses in sample data',String(state.courses.length)],['Average course progress',Math.round(state.courses.reduce((a,c)=>a+c.progress,0)/Math.max(1,state.courses.length))+'%'],['Pending approvals',String(state.approvals.filter(a=>a.status==='pending').length)],['Data quality','Illustrative sample data — verify before operational use']
+  ];
+  $('reportResult').innerHTML='<div class="table-wrap"><table class="data-table"><tbody>'+rows.map(r=>`<tr><td><strong>${escapeHTML(r[0])}</strong></td><td>${escapeHTML(r[1])}</td></tr>`).join('')+'</tbody></table></div><p style="font-size:10px;color:var(--muted);margin-top:13px">This is a simulated report preview, not an official institutional report.</p>';
+  toast('Sample report preview generated.');
+}
+function downloadReport(){
+  const title=$('reportResultTitle').textContent;
+  const rows=[['Field','Value'],['Report type',title],['Reporting period','October 2026'],['Courses in sample data',state.courses.length],['Average course progress',Math.round(state.courses.reduce((a,c)=>a+c.progress,0)/Math.max(1,state.courses.length))+'%'],['Pending approvals',state.approvals.filter(a=>a.status==='pending').length],['Data quality','Illustrative sample data']];
+  downloadText(title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.csv',rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv');
+}
+function downloadText(filename,text,mime='text/plain'){
+  const blob=new Blob([text],{type:mime+';charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast('Download created from prototype content.');
+}
+function showNotifications(){
+  showModal('Notifications','You have 2 items awaiting faculty review and 1 curriculum draft in progress.',[
+    {label:'Close',className:'btn-secondary',action:closeModal},
+    {label:'Review items',className:'btn-primary',action:()=>{closeModal();navigate('approvals');}}
+  ]);
+}
+function showModal(title,message,actions=[],customHTML=''){
+  const root=$('modalRoot');root.className='';
+  root.innerHTML=`<div class="modal-backdrop" role="presentation" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">${escapeHTML(title)}</h2><p>${escapeHTML(message).replace(/\n/g,'<br>')}</p>${customHTML}<div class="modal-actions">${actions.map((a,i)=>`<button class="btn ${a.className||'btn-secondary'}" data-modal-action="${i}">${escapeHTML(a.label)}</button>`).join('')}</div></div></div>`;
+  root.querySelectorAll('[data-modal-action]').forEach(btn=>btn.addEventListener('click',()=>actions[Number(btn.dataset.modalAction)].action()));
+}
+function closeModal(){$('modalRoot').className='hidden';$('modalRoot').innerHTML='';}
+$('settingsForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=$('settingName').value.trim(),role=$('settingRole').value,inst=$('settingInstitution').value.trim();
+  if(!name||!inst){toast('Name and institution are required.','error');return;}
+  $('userLabel').textContent=name;$('roleLabel').textContent=role+' workspace';$('institutionLabel').textContent=inst;
+  $('settingName').value=name;$('settingInstitution').value=inst;toast('Workspace preferences updated in this browser.');
+});
+$('globalSearch').addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const q=e.target.value.trim().toLowerCase();if(!q){toast('Enter a search term.','error');return;}
+  const matches=[];
+  state.courses.forEach(c=>{if(c.name.toLowerCase().includes(q))matches.push({page:'courses',label:'Course: '+c.name});});
+  state.approvals.forEach(a=>{if((a.title+' '+a.course).toLowerCase().includes(q))matches.push({page:'approvals',label:'Review: '+a.title});});
+  state.tasks.forEach(t=>{if(t.title.toLowerCase().includes(q))matches.push({page:'tasks',label:'Task: '+t.title});});
+  if(matches.length){navigate(matches[0].page);toast('Found '+matches.length+' matching item(s). Showing '+matches[0].label);}
+  else toast('No matching sample data found.','error');
+});
+function renderInitial(){
+  renderDashboard();renderApprovals();renderTasks();renderCourses();renderCalendar();renderEvents();
+}
+renderInitial();
+</script>
+</body>
+</html>
