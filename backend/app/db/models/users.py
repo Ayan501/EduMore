@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     String,
     func,
+    UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -28,6 +29,14 @@ class User(Base):
     """Database model representing an institution user."""
 
     __tablename__ = "users"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "institution_id",
+            "email",
+            name = "uq_user_institution_email",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
